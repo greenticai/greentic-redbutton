@@ -1,0 +1,23 @@
+{
+  "cli.devices.entry": "- {vendor_id}:{product_id} {name} via {backend}",
+  "cli.devices.header": "Available HID devices:",
+  "cli.devices.none": "No HID devices were detected.",
+  "cli.doctor.config_line": "- {line}",
+  "cli.doctor.device_line": "- {line}",
+  "cli.doctor.header": "Doctor report:",
+  "cli.doctor.matching_devices": "Matching devices:",
+  "cli.doctor.no_matching_devices": "No matching devices are currently connected.",
+  "cli.doctor.press_ok": "Press test succeeded: {result}",
+  "cli.doctor.press_timeout": "Press test timed out without a matching key-down event.",
+  "cli.i18n.status.extra_keys": "{count} locale keys are extra compared with `en`.",
+  "cli.i18n.status.missing_files": "{count} locale files are missing.",
+  "cli.i18n.status.missing_keys": "{count} locale keys are missing compared with `en`.",
+  "cli.i18n.status.ok": "All {count} locale files are present and synchronized with `en`.",
+  "cli.i18n.validate.error": "i18n validation failed:\n{details}",
+  "cli.i18n.validate.ok": "i18n validation passed for {count} locales.",
+  "cli.once.sent": "Webhook sent for button press at {timestamp}.",
+  "cli.once.waiting": "Waiting for one matching button press...",
+  "cli.runtime.config": "Config: vendor_id={vendor_id} product_id={product_id} key={key} webhook_url={webhook_url} timeout_ms={timeout_ms}",
+  "cli.runtime.starting": "Starting red-button listener.",
+  "cli.runtime.version": "greentic-redbutton {version}"
+}
