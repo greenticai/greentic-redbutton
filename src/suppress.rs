@@ -204,9 +204,10 @@ mod platform {
     use std::ffi::c_void;
     use std::ptr;
     use std::sync::OnceLock;
-    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::mpsc;
     use std::thread;
+    use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
     use anyhow::{Result, bail};
     use core_foundation_sys::base::{CFAllocatorRef, CFRelease, CFTypeRef, kCFAllocatorDefault};
@@ -243,8 +244,9 @@ mod platform {
     const KCG_KEYBOARD_EVENT_KEYCODE: u32 = 9;
     const RETURN_KEYCODE: i64 = 36;
     const AX_PROMPT_KEY: &[u8] = b"AXTrustedCheckOptionPrompt\0";
+    const SUPPRESSION_WINDOW: Duration = Duration::from_millis(250);
 
-    static SUPPRESS_RETURN: AtomicBool = AtomicBool::new(false);
+    static SUPPRESS_UNTIL_MS: AtomicU64 = AtomicU64::new(0);
     static START_RESULT: OnceLock<std::result::Result<(), String>> = OnceLock::new();
 
     #[link(name = "ApplicationServices", kind = "framework")]
@@ -324,14 +326,17 @@ mod platform {
         if let Err(error) = startup {
             bail!("failed to enable Enter suppression on macOS: {error}");
         }
-        SUPPRESS_RETURN.store(true, Ordering::SeqCst);
         Ok(Box::new(MacSuppressor))
     }
 
     struct MacSuppressor;
 
     impl InputSuppressor for MacSuppressor {
-        fn notify_button_press(&self) {}
+        fn notify_button_press(&self) {
+            let now = current_time_ms();
+            let deadline = now.saturating_add(SUPPRESSION_WINDOW.as_millis() as u64);
+            SUPPRESS_UNTIL_MS.store(deadline, Ordering::SeqCst);
+        }
     }
 
     fn start_event_tap_thread() -> std::result::Result<(), String> {
@@ -378,7 +383,7 @@ mod platform {
         _user_info: *mut c_void,
     ) -> CGEventRef {
         if (type_ == KCG_EVENT_KEY_DOWN || type_ == KCG_EVENT_KEY_UP)
-            && SUPPRESS_RETURN.load(Ordering::SeqCst)
+            && current_time_ms() <= SUPPRESS_UNTIL_MS.load(Ordering::SeqCst)
             && unsafe { CGEventGetIntegerValueField(event, KCG_KEYBOARD_EVENT_KEYCODE) }
                 == RETURN_KEYCODE
         {
@@ -386,6 +391,13 @@ mod platform {
         }
 
         event
+    }
+
+    fn current_time_ms() -> u64 {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() as u64
     }
 }
 
