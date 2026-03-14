@@ -391,6 +391,7 @@ mod platform {
 
 #[cfg(target_os = "windows")]
 mod platform {
+    use std::ptr;
     use std::sync::OnceLock;
     use std::sync::atomic::{AtomicU64, Ordering};
     use std::sync::mpsc;
@@ -442,8 +443,8 @@ mod platform {
     fn start_hook_thread() -> std::result::Result<(), String> {
         let (sender, receiver) = mpsc::channel();
         thread::spawn(move || unsafe {
-            let hook = SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_hook), 0, 0);
-            if hook == 0 {
+            let hook = SetWindowsHookExW(WH_KEYBOARD_LL, Some(keyboard_hook), ptr::null_mut(), 0);
+            if hook.is_null() {
                 let _ = sender.send(Err(std::io::Error::last_os_error().to_string()));
                 return;
             }
@@ -451,7 +452,7 @@ mod platform {
             let _ = sender.send(Ok(()));
             let mut message = MSG::default();
             loop {
-                let status = GetMessageW(&mut message, 0, 0, 0);
+                let status = GetMessageW(&mut message, ptr::null_mut(), 0, 0);
                 if status == -1 {
                     break;
                 }
@@ -472,7 +473,7 @@ mod platform {
 
     unsafe extern "system" fn keyboard_hook(code: i32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
         if code == HC_ACTION as i32 {
-            let data = &*(lparam as *const KBDLLHOOKSTRUCT);
+            let data = unsafe { &*(lparam as *const KBDLLHOOKSTRUCT) };
             let _ = wparam;
             if data.vkCode == VK_RETURN as u32
                 && current_time_ms() <= SUPPRESS_UNTIL_MS.load(Ordering::SeqCst)
@@ -481,7 +482,7 @@ mod platform {
             }
         }
 
-        unsafe { CallNextHookEx(0 as HHOOK, code, wparam, lparam) }
+        unsafe { CallNextHookEx(ptr::null_mut() as HHOOK, code, wparam, lparam) }
     }
 
     fn current_time_ms() -> u64 {
