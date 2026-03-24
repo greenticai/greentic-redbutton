@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - master
+      - main
       - main
 
 concurrency:
@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   release-meta:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -71,7 +71,7 @@ jobs:
         run: bash ci/local_check.sh package
 
   publish-crates:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     needs:
       - release-meta
@@ -112,7 +112,7 @@ jobs:
           done < <(python3 ci/publishable_crates.py)
 
   binstall-build:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs:
       - release-meta
       - lint
@@ -210,7 +210,7 @@ jobs:
           path: dist/*
 
   create-release:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     needs:
       - release-meta
