@@ -1,0 +1,29 @@
+id: on_message
+title: Chat Message Handler
+description: Handle chat messages - extract events or respond with help
+type: messaging
+start: extract_event
+schema_version: 2
+
+nodes:
+  extract_event:
+    component.exec:
+      component: component-msg2events
+      operation: extract
+      message: "{{in.input}}"
+      source_provider: webchat
+    routing:
+      - to: reply
+
+  reply:
+    emit.response:
+      messages:
+        - type: text
+          text: |
+            Received: {{in.input.text}}
+
+            Extracted event:
+            - Type: {{extract_event.event.event_type}}
+            - Source: {{extract_event.event.source.provider}}
+    routing:
+      - out: true

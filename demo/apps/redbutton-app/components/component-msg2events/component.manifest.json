@@ -1,0 +1,83 @@
+{
+  "$schema": "https://greentic-ai.github.io/greentic-component/schemas/v1/component.manifest.schema.json",
+  "id": "component-msg2events",
+  "name": "component-msg2events",
+  "version": "0.1.0",
+  "world": "greentic:component/component@0.6.0",
+  "describe_export": "greentic:component/node@0.6.0",
+  "operations": [
+    {
+      "name": "route",
+      "input_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "extract",
+      "input_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "validate",
+      "input_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": true
+      },
+      "output_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  ],
+  "default_operation": "extract",
+  "config_schema": {
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+  },
+  "supports": ["messaging"],
+  "profiles": {
+    "default": "stateless",
+    "supported": ["stateless"]
+  },
+  "secret_requirements": [],
+  "capabilities": {
+    "wasi": {
+      "filesystem": {
+        "mode": "none",
+        "mounts": []
+      },
+      "random": false,
+      "clocks": false
+    },
+    "host": {}
+  },
+  "limits": {
+    "memory_mb": 128,
+    "wall_time_ms": 1000
+  },
+  "artifacts": {
+    "component_wasm": "component_msg2events.wasm"
+  },
+  "hashes": {
+    "component_wasm": "blake3:0000000000000000000000000000000000000000000000000000000000000000"
+  }
+}

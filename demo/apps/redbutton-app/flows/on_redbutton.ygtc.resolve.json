@@ -1,1 +1,1 @@
-{"schema_version":1,"flow":"on_redbutton.ygtc.resolve.json","nodes":{"process_event":{"source":{"kind":"local","path":"../components/redbutton-handler/component.wasm","digest":"sha256:1c96c49de19e925050a1ae99ad795e24a1bb77ea5128c9f1376994aeef3402ff"}}}}
+{"schema_version":1,"flow":"on_redbutton.ygtc","nodes":{"process_event":{"source":{"kind":"local","path":"../components/redbutton-handler/component.wasm","digest":"sha256:1c96c49de19e925050a1ae99ad795e24a1bb77ea5128c9f1376994aeef3402ff"},"mode":"pinned"}}}

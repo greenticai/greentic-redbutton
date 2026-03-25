@@ -1,8 +1,38 @@
 pack_id: redbutton-app
-version: 0.1.0
+version: 0.2.0
 kind: application
 publisher: Greentic
 components:
+- id: component-events2msg
+  version: 0.1.0
+  world: greentic:component/component@0.6.0
+  supports:
+  - messaging
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/component-events2msg/component.wasm
+- id: component-msg2events
+  version: 0.1.0
+  world: greentic:component/component@0.6.0
+  supports:
+  - messaging
+  profiles:
+    default: stateless
+    supported:
+    - stateless
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/component-msg2events/component.wasm
 - id: redbutton-handler
   version: 0.1.0
   world: greentic:component/component@0.6.0
@@ -25,6 +55,13 @@ flows:
   file: flows/on_redbutton.ygtc
   tags:
   - events
+  - default
+  entrypoints:
+  - default
+- id: on_message
+  file: flows/on_message.ygtc
+  tags:
+  - messaging
   - default
   entrypoints:
   - default

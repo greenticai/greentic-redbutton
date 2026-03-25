@@ -17,6 +17,8 @@ apps:
     enabled: true
     pack: apps/redbutton-app
     routing:
+      messaging:
+        default: on_message
       events:
         webhook: on_redbutton
 
