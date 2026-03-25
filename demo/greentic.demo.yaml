@@ -1,0 +1,37 @@
+version: "1"
+project_root: "./"
+tenant: "demo"
+team: "default"
+environment: "dev"
+
+logging:
+  level: "debug"
+  format: "pretty"
+
+http:
+  host: "127.0.0.1"
+  port: 8080
+
+apps:
+  redbutton-app:
+    enabled: true
+    pack: apps/redbutton-app
+    routing:
+      events:
+        webhook: on_redbutton
+
+providers:
+  events:
+    webhook:
+      enabled: true
+      pack: providers/events/events-webhook.gtpack
+
+  messaging:
+    webchat-gui:
+      enabled: true
+      pack: providers/messaging/messaging-webchat-gui.gtpack
+
+  state:
+    memory:
+      enabled: true
+      pack: providers/state/state-memory.gtpack

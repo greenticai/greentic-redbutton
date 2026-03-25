@@ -1,0 +1,31 @@
+pack_id: redbutton-app
+version: 0.1.0
+kind: application
+publisher: Greentic
+components:
+- id: redbutton-handler
+  version: 0.1.0
+  world: greentic:component/component@0.6.0
+  supports:
+  - messaging
+  - event
+  profiles:
+    default: default
+    supported:
+    - default
+  capabilities:
+    wasi:
+      random: false
+      clocks: false
+    host: {}
+  wasm: components/redbutton-handler/component.wasm
+dependencies: []
+flows:
+- id: default
+  file: flows/on_redbutton.ygtc
+  tags:
+  - events
+  - default
+  entrypoints:
+  - default
+assets: []

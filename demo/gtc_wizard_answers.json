@@ -1,0 +1,85 @@
+{
+  "wizard_id": "greentic-dev.wizard.launcher.main",
+  "schema_id": "greentic-dev.launcher.main",
+  "schema_version": "1.0.0",
+  "locale": "en",
+  "answers": {
+    "selected_action": "bundle",
+    "delegate_answer_document": {
+      "wizard_id": "greentic-bundle.wizard.run",
+      "schema_id": "greentic-bundle.wizard.answers",
+      "schema_version": "1.0.0",
+      "locale": "en",
+      "answers": {
+        "access_rules": [
+          {
+            "policy": "public",
+            "rule_path": "redbutton-app",
+            "tenant": "default"
+          }
+        ],
+        "advanced_setup": false,
+        "app_pack_entries": [
+          {
+            "detected_kind": "local_dir",
+            "display_name": "Red Button App",
+            "mapping": {
+              "scope": "global"
+            },
+            "pack_id": "redbutton-app",
+            "reference": "./apps/redbutton-app"
+          }
+        ],
+        "app_packs": [
+          "./apps/redbutton-app"
+        ],
+        "bundle_id": "redbutton-demo",
+        "bundle_name": "Red Button Demo",
+        "export_intent": false,
+        "extension_provider_entries": [
+          {
+            "detected_kind": "oci",
+            "display_name": "Greentic Events Webhook",
+            "provider_id": "greentic.events.webhook",
+            "reference": "oci://ghcr.io/greenticai/packs/events/events-webhook:latest",
+            "version": "latest"
+          },
+          {
+            "detected_kind": "oci",
+            "display_name": "Greentic WebChat GUI",
+            "provider_id": "greentic.messaging.webchat-gui",
+            "reference": "oci://ghcr.io/greenticai/greentic-packs/messaging-webchat-gui:latest",
+            "version": "latest"
+          },
+          {
+            "detected_kind": "oci",
+            "display_name": "Greentic State Memory",
+            "provider_id": "greentic.state.memory",
+            "reference": "oci://ghcr.io/greenticai/greentic-packs/state-memory:latest",
+            "version": "latest"
+          }
+        ],
+        "extension_providers": [
+          "oci://ghcr.io/greenticai/packs/events/events-webhook:latest",
+          "oci://ghcr.io/greenticai/greentic-packs/messaging-webchat-gui:latest",
+          "oci://ghcr.io/greenticai/greentic-packs/state-memory:latest"
+        ],
+        "mode": "create",
+        "output_dir": "demo",
+        "remote_catalogs": [],
+        "setup_answers": {},
+        "setup_execution_intent": false,
+        "setup_specs": {}
+      },
+      "locks": {
+        "cache_policy": "workspace-local",
+        "catalogs": [],
+        "execution": "execute",
+        "lock_file": "bundle.lock.json",
+        "requested_mode": "create",
+        "setup_state_files": [],
+        "workspace_root": "bundle.yaml"
+      }
+    }
+  }
+}

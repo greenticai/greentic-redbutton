@@ -1,0 +1,22 @@
+id: default
+title: Red Button Event Handler
+description: Handle redbutton.click webhook events from greentic-redbutton CLI
+type: event
+start: process_event
+schema_version: 2
+
+nodes:
+  process_event:
+    redbutton-handler.render:
+      text: |
+        Red Button pressed!
+        Source: {{in.event.payload.source}}
+        Event: {{in.event.payload.event_type}}
+        Device: {{in.event.payload.device_name}}
+        Key: {{in.event.payload.key}}
+        VID: {{in.event.payload.vendor_id}}
+        PID: {{in.event.payload.product_id}}
+        OS: {{in.event.payload.os}}/{{in.event.payload.arch}}
+        Timestamp: {{in.event.payload.timestamp}}
+    routing:
+      - out: true

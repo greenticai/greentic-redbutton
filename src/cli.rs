@@ -25,6 +25,10 @@ pub struct Cli {
     #[arg(long, global = true, default_value_t = false)]
     pub verbose: bool,
 
+    /// Disable OS-level input suppression (useful for CI/headless environments).
+    #[arg(long, global = true, default_value_t = false)]
+    pub no_suppress: bool,
+
     #[command(subcommand)]
     pub command: Option<Command>,
 }
