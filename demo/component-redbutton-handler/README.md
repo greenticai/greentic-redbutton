@@ -1,0 +1,47 @@
+# redbutton-handler
+
+A Rust + WASI-P2 Greentic component scaffolded via `greentic-component new`.
+
+Canonical world target: `greentic:component/component@0.6.0`.
+Legacy compatibility notes: `docs/vision/legacy.md` in the `greentic-component` repo.
+
+## Requirements
+
+- Rust 1.91+
+- `wasm32-wasip2` target (`rustup target add wasm32-wasip2`)
+- `cargo-component` (`cargo install cargo-component --locked`)
+
+## Getting Started
+
+```bash
+cargo component build --release --target wasm32-wasip2
+cargo test
+```
+
+The generated `component.manifest.json` references the release artifact at
+`target/wasm32-wasip2/release/redbutton_handler.wasm`.
+Update the manifest hash by running `greentic-component hash component.manifest.json`.
+Validate the artifact by running
+`greentic-component doctor target/wasm32-wasip2/release/redbutton_handler.wasm --manifest component.manifest.json`.
+
+## i18n Workflow
+
+```bash
+./tools/i18n.sh
+cargo build
+```
+
+- `tools/i18n.sh` reads `assets/i18n/locales.json` and generates locale JSON files from `assets/i18n/en.json`.
+- `build.rs` embeds all `assets/i18n/*.json` locale dictionaries into the WASM as a CBOR bundle.
+
+## QA Ops Local Test
+
+- `qa-spec`: emit/expect setup-mode DTO semantics (`setup|update|remove`); input accepts `default|setup|install|update|upgrade|remove`.
+- `apply-answers`: invoke with `{ "mode": "setup", "answers": {...}, "current_config": {...} }` (`install` accepted as alias).
+- `i18n-keys`: invoke with `{}` to list keys referenced by QA/setup paths.
+
+## Next Steps
+
+- Implement domain-specific logic inside `src/lib.rs`.
+- Extend `src/qa.rs` and `assets/i18n/en.json` with your real setup flow fields.
+- Wire additional capabilities or telemetry requirements into `component.manifest.json`.

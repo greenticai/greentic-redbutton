@@ -1,0 +1,21 @@
+schema_version: 1
+bundle_id: redbutton-demo
+bundle_name: Red Button Demo
+locale: en
+mode: create
+advanced_setup: false
+app_packs:
+  - ./apps/redbutton-app
+app_pack_mappings:
+  - reference: ./apps/redbutton-app
+    scope: global
+extension_providers:
+  - oci://ghcr.io/greenticai/packs/events/events-webhook:latest
+  - oci://ghcr.io/greenticai/greentic-packs/messaging-webchat-gui:latest
+  - oci://ghcr.io/greenticai/greentic-packs/state-memory:latest
+remote_catalogs: []
+hooks: []
+subscriptions: []
+capabilities: []
+setup_execution_intent: false
+export_intent: false

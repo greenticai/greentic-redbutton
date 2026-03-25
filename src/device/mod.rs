@@ -208,6 +208,8 @@ fn create_hid_api() -> Result<HidApi> {
 
 pub mod linux;
 pub mod macos;
+#[cfg(test)]
+pub mod mock;
 pub mod windows;
 
 #[cfg(test)]

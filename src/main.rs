@@ -5,6 +5,8 @@ mod device;
 mod doctor;
 mod event;
 mod i18n;
+#[cfg(test)]
+mod integration_tests;
 mod runtime;
 mod suppress;
 mod webhook;

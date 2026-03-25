@@ -1,0 +1,34 @@
+.PHONY: build test lint check flows wasm
+
+BUILD_FLAGS ?=
+DIST_DIR := dist
+WASM_OUT := $(DIST_DIR)/redbutton-handler__0_6_0.wasm
+
+default: build
+
+build:
+	greentic-dev component build --manifest ./component.manifest.json $(BUILD_FLAGS)
+
+flows:
+	greentic-component flow update
+
+wasm:
+	if ! cargo component --version >/dev/null 2>&1; then \
+		echo "cargo-component is required for component@0.6.0 builds"; \
+		echo "install with: cargo install cargo-component --locked"; \
+		exit 1; \
+	fi
+	cargo component build --release --target wasm32-wasip2
+	mkdir -p $(DIST_DIR)
+	cp target/wasm32-wasip2/release/redbutton_handler.wasm $(WASM_OUT)
+	greentic-component hash ./component.manifest.json --wasm $(WASM_OUT)
+
+check:
+	greentic-dev component doctor $(WASM_OUT) --manifest ./component.manifest.json
+
+lint:
+	cargo fmt --all
+	cargo clippy --workspace --all-targets -- -D warnings
+
+test:
+	cargo test --workspace --all-targets

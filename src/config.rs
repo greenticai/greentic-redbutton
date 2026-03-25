@@ -17,6 +17,8 @@ pub struct Config {
     pub webhook_url: Url,
     pub timeout_ms: u64,
     pub verbose: bool,
+    /// When false, skip OS-level input suppression (useful for CI/headless).
+    pub suppress: bool,
 }
 
 impl Config {
@@ -51,6 +53,11 @@ impl Config {
             bail!("timeout must be greater than zero milliseconds");
         }
 
+        let suppress = !cli.no_suppress
+            && env::var("GREENTIC_REDBUTTON_NO_SUPPRESS")
+                .map(|v| v != "1" && v != "true")
+                .unwrap_or(true);
+
         Ok(Self {
             vendor_id,
             product_id,
@@ -59,6 +66,7 @@ impl Config {
                 .with_context(|| format!("invalid webhook URL: {webhook_url_raw}"))?,
             timeout_ms,
             verbose: cli.verbose,
+            suppress,
         })
     }
 
@@ -109,6 +117,7 @@ mod tests {
             webhook_url: None,
             timeout_ms: None,
             verbose: false,
+            no_suppress: true,
             command: Some(Command::Version),
         }
     }

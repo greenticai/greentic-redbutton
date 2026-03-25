@@ -9,13 +9,35 @@ use crate::constants::{EVENT_TYPE_CLICK, RECONNECT_DELAY_MS, SOURCE_NAME};
 use crate::device::{DeviceBackend, DeviceStream};
 use crate::event::{ButtonEventKind, WebhookEvent};
 use crate::suppress::{
-    activate_input_suppressor, ensure_startup_permissions, log_startup_permission_status,
+    InputSuppressor, activate_input_suppressor, ensure_startup_permissions,
+    log_startup_permission_status,
 };
 use crate::webhook::send_webhook;
 
+fn maybe_ensure_permissions(config: &Config) -> Result<()> {
+    if config.suppress {
+        ensure_startup_permissions(&config.matcher())?;
+    }
+    Ok(())
+}
+
+fn maybe_activate_suppressor(config: &Config) -> Result<Box<dyn InputSuppressor>> {
+    if config.suppress {
+        activate_input_suppressor(&config.matcher())
+    } else {
+        Ok(Box::new(NoopSuppressor))
+    }
+}
+
+struct NoopSuppressor;
+
+impl InputSuppressor for NoopSuppressor {
+    fn notify_button_press(&self) {}
+}
+
 pub fn run_listener(config: &Config, backend: &dyn DeviceBackend) -> Result<()> {
-    ensure_startup_permissions(&config.matcher())?;
-    let suppressor = activate_input_suppressor(&config.matcher())?;
+    maybe_ensure_permissions(config)?;
+    let suppressor = maybe_activate_suppressor(config)?;
     let mut webhook_sender = spawn_webhook_worker(config);
     let mut stream = backend
         .connect(&config.matcher())
@@ -49,9 +71,11 @@ pub fn run_listener(config: &Config, backend: &dyn DeviceBackend) -> Result<()> 
 }
 
 pub fn run_once(config: &Config, backend: &dyn DeviceBackend) -> Result<WebhookEvent> {
-    log_startup_permission_status(&config.matcher());
-    ensure_startup_permissions(&config.matcher())?;
-    let suppressor = activate_input_suppressor(&config.matcher())?;
+    if config.suppress {
+        log_startup_permission_status(&config.matcher());
+    }
+    maybe_ensure_permissions(config)?;
+    let suppressor = maybe_activate_suppressor(config)?;
     let mut stream = backend
         .connect(&config.matcher())
         .context("failed to connect to matching device")?;
@@ -80,8 +104,8 @@ pub fn wait_for_press(
     config: &Config,
     backend: &dyn DeviceBackend,
 ) -> Result<Option<(String, chrono::DateTime<chrono::Utc>)>> {
-    ensure_startup_permissions(&config.matcher())?;
-    let suppressor = activate_input_suppressor(&config.matcher())?;
+    maybe_ensure_permissions(config)?;
+    let suppressor = maybe_activate_suppressor(config)?;
     let start = Instant::now();
     let timeout = Duration::from_millis(config.timeout_ms);
 
@@ -129,7 +153,9 @@ pub fn wait_for_press(
 }
 
 pub fn reconnecting_listener(config: &Config, backend: &dyn DeviceBackend) -> Result<()> {
-    log_startup_permission_status(&config.matcher());
+    if config.suppress {
+        log_startup_permission_status(&config.matcher());
+    }
     loop {
         match run_listener(config, backend) {
             Ok(()) => return Ok(()),
