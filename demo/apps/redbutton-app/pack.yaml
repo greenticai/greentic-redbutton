@@ -62,7 +62,6 @@ flows:
   file: flows/on_message.ygtc
   tags:
   - messaging
-  - default
   entrypoints:
-  - default
+  - messaging
 assets: []
