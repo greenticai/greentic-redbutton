@@ -1,29 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Bootstrap the redbutton demo bundle by copying provider gtpack files
-# from the workspace. Run this from the greentic-redbutton repo root:
-#
-#   bash demo/setup.sh
-#
-# Then start the demo:
-#
-#   gtc start demo/ --cloudflared off
-#
-# In another terminal, send a button press:
-#
-#   cargo run -- --webhook-url http://127.0.0.1:8080/v1/events/ingress/webhook/demo/default/redbutton --no-suppress once
+# Bootstrap the redbutton demo bundle.
+# Usage: bash demo/setup.sh
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DEMO_DIR="$SCRIPT_DIR"
 WORKSPACE="$(cd "$SCRIPT_DIR/../.." && pwd)"
+GREENTIC_START="$WORKSPACE/greentic-start/target/release/greentic-start"
 
 step() { printf '\n==> %s\n' "$1"; }
 
-# Resolve provider gtpack files from workspace
 resolve_provider() {
-  local type="$1"      # events, messaging, state
-  local name="$2"      # events-webhook, messaging-webchat-gui, state-memory
+  local type="$1"
+  local name="$2"
   local dest_dir="$DEMO_DIR/providers/$type"
   local dest="$dest_dir/$name.gtpack"
 
@@ -34,7 +24,6 @@ resolve_provider() {
 
   mkdir -p "$dest_dir"
 
-  # Try common workspace locations
   local candidates=(
     "$WORKSPACE/demo-bundle/providers/$type/$name.gtpack"
     "$WORKSPACE/all-message-demo/providers/$type/$name.gtpack"
@@ -43,7 +32,6 @@ resolve_provider() {
     "$WORKSPACE/packs/$name/dist/$name.gtpack"
   )
 
-  # For messaging/state providers, also check under messaging/
   if [[ "$type" != "events" ]]; then
     candidates+=(
       "$WORKSPACE/demo-bundle/providers/messaging/$name.gtpack"
@@ -54,7 +42,7 @@ resolve_provider() {
   for candidate in "${candidates[@]}"; do
     if [[ -f "$candidate" ]]; then
       cp "$candidate" "$dest"
-      echo "  [ok]   $name.gtpack <- $(basename "$(dirname "$(dirname "$candidate")")")/..."
+      echo "  [ok]   $name.gtpack"
       return 0
     fi
   done
@@ -64,7 +52,7 @@ resolve_provider() {
 }
 
 step "Clearing stale runtime state"
-rm -rf "$DEMO_DIR/state" "$DEMO_DIR/.greentic"
+rm -rf "$DEMO_DIR/state" "$DEMO_DIR/logs"
 echo "  done"
 
 step "Resolving provider gtpack files from workspace"
@@ -76,19 +64,43 @@ resolve_provider state   state-memory           || MISSING=$((MISSING + 1))
 if [[ "$MISSING" -gt 0 ]]; then
   echo ""
   echo "WARNING: $MISSING provider(s) not found."
-  echo "Build them first or use 'gtc wizard --answers demo/gtc_wizard_answers.json' to pull from OCI."
   exit 1
 fi
 
-step "Demo bundle ready"
-echo ""
-echo "Start the runtime:"
-echo "  gtc start demo/ --cloudflared off"
-echo ""
-echo "Then send a red button event (in another terminal):"
-echo "  cargo run -- --webhook-url http://127.0.0.1:8080/v1/events/ingress/webhook/demo/default/redbutton --no-suppress once"
-echo ""
-echo "Or with curl:"
-echo '  curl -X POST http://127.0.0.1:8080/v1/events/ingress/webhook/demo/default/redbutton \'
-echo '    -H "Content-Type: application/json" \'
-echo '    -d '"'"'{"source":"greentic-redbutton","event_type":"redbutton.click","vendor_id":32904,"product_id":21,"key":"enter","timestamp":"2026-03-24T12:00:00Z"}'"'"
+step "Building app pack"
+if command -v greentic-pack &>/dev/null; then
+  greentic-pack build --in "$DEMO_DIR/apps/redbutton-app" --allow-pack-schema 2>&1 | tail -1
+  mkdir -p "$DEMO_DIR/packs"
+  cp "$DEMO_DIR/apps/redbutton-app/dist/redbutton-app.gtpack" "$DEMO_DIR/packs/default.gtpack"
+  echo "  packs/default.gtpack ready"
+else
+  echo "  [skip] greentic-pack not found, using existing packs/default.gtpack"
+fi
+
+step "Setup webchat secrets (if not already done)"
+if [[ ! -f "$DEMO_DIR/.greentic/dev/.dev.secrets.env" ]]; then
+  echo "  Run: gtc setup demo/"
+  echo "  Then re-run this script."
+else
+  echo "  secrets already configured"
+fi
+
+step "Demo ready"
+cat << 'USAGE'
+
+Start server (Terminal 1):
+  GREENTIC_PROVIDER_CORE_ONLY=false GREENTIC_ENV=dev \
+    greentic-start start --bundle demo/ --cloudflared off
+
+Live dashboard (Terminal 2):
+  bash demo/watch.sh
+
+Send event (Terminal 3):
+  curl -X POST http://127.0.0.1:8080/v1/events/ingress/webhook/demo/default/redbutton \
+    -H "Content-Type: application/json" \
+    -d '{"source":"greentic-redbutton","event_type":"redbutton.click","vendor_id":32904,"product_id":21,"key":"enter","timestamp":"2026-03-25T08:00:00Z","device_name":"LinTx Keyboard","os":"macos","arch":"aarch64"}'
+
+Webchat (browser):
+  http://127.0.0.1:8080/v1/web/webchat/demo/
+
+USAGE
