@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Red Button Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0a0a;
+    color: #e0e0e0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header {
+    width: 100%;
+    padding: 24px 32px;
+    background: #111;
+    border-bottom: 1px solid #222;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  header h1 { font-size: 20px; font-weight: 600; }
+  header .status {
+    margin-left: auto;
+    font-size: 13px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    background: #1a2e1a;
+    color: #4ade80;
+  }
+  header .status.offline { background: #2e1a1a; color: #f87171; }
+  .counter-section {
+    padding: 48px 32px;
+    text-align: center;
+  }
+  .counter {
+    font-size: 120px;
+    font-weight: 800;
+    color: #ef4444;
+    line-height: 1;
+    transition: transform 0.15s ease;
+  }
+  .counter.pulse {
+    transform: scale(1.15);
+  }
+  .counter-label {
+    font-size: 14px;
+    color: #888;
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .flash {
+    position: fixed;
+    inset: 0;
+    background: rgba(239, 68, 68, 0.08);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .flash.active { opacity: 1; }
+  .events-section {
+    width: 100%;
+    max-width: 700px;
+    padding: 0 32px 48px;
+    flex: 1;
+  }
+  .events-section h2 {
+    font-size: 14px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+  .event-list { display: flex; flex-direction: column; gap: 8px; }
+  .event-card {
+    background: #151515;
+    border: 1px solid #252525;
+    border-radius: 8px;
+    padding: 16px;
+    animation: slideIn 0.3s ease;
+  }
+  .event-card.new {
+    border-color: #ef4444;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+  }
+  .event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .event-type {
+    font-size: 13px;
+    font-weight: 600;
+    color: #ef4444;
+    background: #1f1010;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .event-time { font-size: 12px; color: #666; }
+  .event-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+    font-size: 13px;
+  }
+  .event-details dt { color: #666; }
+  .event-details dd { color: #ccc; }
+  .btn-section { padding: 0 32px 32px; }
+  .btn-simulate {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-simulate:hover { background: #dc2626; }
+  .btn-simulate:active { transform: scale(0.97); }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+  <div class="flash" id="flash"></div>
+  <header>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <h1>Greentic Red Button Dashboard</h1>
+    <div class="status" id="status">Connecting...</div>
+  </header>
+
+  <div class="counter-section">
+    <div class="counter" id="counter">0</div>
+    <div class="counter-label">button presses</div>
+  </div>
+
+  <div class="btn-section">
+    <button class="btn-simulate" onclick="simulatePress()">Simulate Button Press</button>
+  </div>
+
+  <div class="events-section">
+    <h2>Event Log</h2>
+    <div class="event-list" id="eventList">
+      <div style="color:#555; font-size:13px;">No events yet. Press the button or click Simulate.</div>
+    </div>
+  </div>
+
+<script>
+const WEBHOOK_URL = 'http://127.0.0.1:8080/v1/events/ingress/webhook/demo/default/redbutton';
+const POLL_INTERVAL = 2000;
+let pressCount = 0;
+let knownRuns = new Set();
+
+function flashScreen() {
+  const el = document.getElementById('flash');
+  el.classList.add('active');
+  setTimeout(() => el.classList.remove('active'), 400);
+  const counter = document.getElementById('counter');
+  counter.classList.add('pulse');
+  setTimeout(() => counter.classList.remove('pulse'), 200);
+}
+
+function addEventCard(data, isNew) {
+  const list = document.getElementById('eventList');
+  if (pressCount === 1 && list.children[0]?.style?.color) {
+    list.innerHTML = '';
+  }
+  const card = document.createElement('div');
+  card.className = 'event-card' + (isNew ? ' new' : '');
+  const time = data.timestamp || data.occurred_at || new Date().toISOString();
+  const localTime = new Date(time).toLocaleTimeString();
+  card.innerHTML = `
+    <div class="event-header">
+      <span class="event-type">${data.event_type || 'redbutton.click'}</span>
+      <span class="event-time">${localTime}</span>
+    </div>
+    <dl class="event-details">
+      <dt>Source</dt><dd>${data.source || '?'}</dd>
+      <dt>Device</dt><dd>${data.device_name || '?'}</dd>
+      <dt>Key</dt><dd>${data.key || '?'}</dd>
+      <dt>OS</dt><dd>${(data.os || '?') + '/' + (data.arch || '?')}</dd>
+      <dt>VID:PID</dt><dd>${data.vendor_id || '?'}:${data.product_id || '?'}</dd>
+      <dt>Status</dt><dd style="color:#4ade80">Success</dd>
+    </dl>
+  `;
+  list.prepend(card);
+  setTimeout(() => card.classList.remove('new'), 2000);
+}
+
+function updateCounter() {
+  document.getElementById('counter').textContent = pressCount;
+}
+
+async function simulatePress() {
+  const payload = {
+    source: 'greentic-redbutton',
+    event_type: 'redbutton.click',
+    vendor_id: 32904,
+    product_id: 21,
+    key: 'enter',
+    timestamp: new Date().toISOString(),
+    device_name: 'Dashboard Simulate',
+    os: navigator.platform.includes('Mac') ? 'macos' : 'linux',
+    arch: 'aarch64'
+  };
+  try {
+    const res = await fetch(WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) {
+      pressCount++;
+      updateCounter();
+      flashScreen();
+      addEventCard(payload, true);
+      document.getElementById('status').textContent = 'Connected';
+      document.getElementById('status').className = 'status';
+    }
+  } catch (e) {
+    document.getElementById('status').textContent = 'Offline';
+    document.getElementById('status').className = 'status offline';
+  }
+}
+
+async function pollRuns() {
+  try {
+    const res = await fetch('/api/redbutton/runs');
+    if (res.ok) {
+      const runs = await res.json();
+      for (const run of runs) {
+        if (!knownRuns.has(run.id)) {
+          knownRuns.add(run.id);
+          if (knownRuns.size > 1) {
+            pressCount++;
+            updateCounter();
+            flashScreen();
+            addEventCard(run.payload || {}, true);
+          }
+        }
+      }
+      document.getElementById('status').textContent = 'Connected';
+      document.getElementById('status').className = 'status';
+    }
+  } catch (e) {
+    // Polling endpoint not available, rely on simulate button
+  }
+}
+
+// Check server health
+async function checkHealth() {
+  try {
+    const res = await fetch(WEBHOOK_URL.replace(/\/v1\/.*/, '/'), { method: 'GET' });
+    document.getElementById('status').textContent = 'Connected';
+    document.getElementById('status').className = 'status';
+  } catch (e) {
+    document.getElementById('status').textContent = 'Offline';
+    document.getElementById('status').className = 'status offline';
+  }
+}
+
+checkHealth();
+setInterval(checkHealth, 5000);
+</script>
+</body>
+</html>
