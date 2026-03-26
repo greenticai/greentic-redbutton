@@ -1,20 +1,19 @@
 name: CI
-
 on:
-  pull_request:
+  workflow_call:
   push:
-    branches:
-      - main
-      - main
+    branches: [main]
+  pull_request:
 
 permissions:
   contents: read
 
-concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
+  ci:
+    uses: greenticai/.github/.github/workflows/host-crate-ci.yml@main
+    with:
+      setup-script: "sudo apt-get update && sudo apt-get install -y pkg-config libudev-dev"
+
   release-meta:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
@@ -30,44 +29,12 @@ jobs:
         name: Resolve release tag
         run: echo "tag=v${{ steps.version.outputs.version }}" >> "$GITHUB_OUTPUT"
 
-  lint:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Linux build dependencies
-        run: sudo apt-get update && sudo apt-get install -y pkg-config libudev-dev
-      - name: Verify libudev is available
-        run: pkg-config --modversion libudev
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
-      - uses: Swatinem/rust-cache@v2
-      - name: cargo fmt
-        run: cargo fmt --all -- --check
-      - name: cargo clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
-
-  test:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Linux build dependencies
-        run: sudo apt-get update && sudo apt-get install -y pkg-config libudev-dev
-      - name: Verify libudev is available
-        run: pkg-config --modversion libudev
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: cargo test
-        run: cargo test --all-features
-
   package-dry-run:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Install Linux build dependencies
         run: sudo apt-get update && sudo apt-get install -y pkg-config libudev-dev
-      - name: Verify libudev is available
-        run: pkg-config --modversion libudev
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: package and publish dry-run
@@ -78,16 +45,13 @@ jobs:
     runs-on: ubuntu-24.04
     needs:
       - release-meta
-      - lint
-      - test
+      - ci
       - package-dry-run
     environment: crates-io
     steps:
       - uses: actions/checkout@v4
       - name: Install Linux build dependencies
         run: sudo apt-get update && sudo apt-get install -y pkg-config libudev-dev
-      - name: Verify libudev is available
-        run: pkg-config --modversion libudev
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Publish crates
@@ -118,8 +82,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs:
       - release-meta
-      - lint
-      - test
+      - ci
       - package-dry-run
     strategy:
       fail-fast: false
