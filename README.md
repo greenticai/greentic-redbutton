@@ -51,7 +51,7 @@ Default values:
 vendor_id   = 32904
 product_id  = 21
 key         = enter
-webhook_url = http://127.0.0.1:8080/events/webhook
+webhook_url = http://127.0.0.1:8080/v1/events/ingress/events-webhook/default/
 timeout_ms  = 5000
 ```
 

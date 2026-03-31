@@ -1,7 +1,8 @@
 pub const DEFAULT_VENDOR_ID: u16 = 32_904;
 pub const DEFAULT_PRODUCT_ID: u16 = 21;
 pub const DEFAULT_KEY: &str = "enter";
-pub const DEFAULT_WEBHOOK_URL: &str = "http://127.0.0.1:8080/events/webhook";
+pub const DEFAULT_WEBHOOK_URL: &str =
+    "http://127.0.0.1:8080/v1/events/ingress/events-webhook/default/";
 pub const DEFAULT_TIMEOUT_MS: u64 = 5_000;
 pub const RECONNECT_DELAY_MS: u64 = 1_000;
 pub const READ_TIMEOUT_MS: i32 = 500;
