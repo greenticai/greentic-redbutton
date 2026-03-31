@@ -347,7 +347,7 @@ fn config_resolves_from_defaults() {
     assert_eq!(config.key, ButtonKey::Enter);
     assert_eq!(
         config.webhook_url.as_str(),
-        "http://127.0.0.1:8080/events/webhook"
+        "http://127.0.0.1:8080/v1/events/ingress/events-webhook/default/"
     );
     assert_eq!(config.timeout_ms, 5_000);
 }
