@@ -13,6 +13,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  ci:
-    uses: ./.github/workflows/ci.yml
-    secrets: inherit
+  build-check:
+    uses: greenticai/.github/.github/workflows/host-crate-ci.yml@main
+    with:
+      setup-script: "sudo apt-get update && sudo apt-get install -y pkg-config libudev-dev"
