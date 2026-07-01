@@ -47,6 +47,13 @@ main.rs → cli.rs (clap parsing) → config.rs (flag/env/default resolution)
   device/{linux,macos,windows}.rs (thin wrappers delegating to GenericHidBackend)
        ↓
   suppress.rs (platform-specific input suppression: Linux EVIOCGRAB, macOS CGEventTap, Windows WH_KEYBOARD_LL)
+
+  event.rs        — core domain types: DeviceMatcher (VID/PID match), ButtonEvent { kind, timestamp }
+  doctor.rs       — diagnostic subcommand: device probe + webhook dry-run (imports config, device, runtime)
+  constants.rs    — built-in defaults (VID/PID, debounce, reconnect delay)
+  i18n.rs         — runtime locale resolution using build-time EMBEDDED_LOCALES
+  device/mock.rs  — MockBackend implementing DeviceBackend for tests (no physical hardware needed)
+  integration_tests.rs — end-to-end tests with a local TCP webhook target
 ```
 
 ### Key Design Decisions
@@ -65,7 +72,7 @@ main.rs → cli.rs (clap parsing) → config.rs (flag/env/default resolution)
 
 ## CI/Release
 
-CI runs on push to master and PRs: lint → test → package-dry-run → publish-crates → binstall-build (6 targets) → create-release. The `ci/publishable_crates.py` script determines crate publish order; `ci/release_version.py` extracts the version from `Cargo.toml`.
+CI runs on push to main and PRs: lint → test → package-dry-run → publish-crates → binstall-build (6 targets) → create-release. The `ci/publishable_crates.py` script determines crate publish order; `ci/release_version.py` extracts the version from `Cargo.toml`. The repo also participates in the nightly dev-publish pipeline (`dev-publish.yml`).
 
 Release flow: bump version in `Cargo.toml` → commit → push tag `vX.Y.Z` → CI publishes to crates.io and builds archives for `cargo-binstall`.
 
@@ -78,4 +85,16 @@ Per `.codex/global_rules.md`, every PR must:
 
 ## Git Commit Rules
 
-Do NOT add `Co-Authored-By: Claude` or AI attribution in commits or PRs. Use conventional commit format (`feat:`, `fix:`, `docs:`, `chore:`). Always create feature branches — never commit directly to master.
+Do NOT add `Co-Authored-By: Claude` or AI attribution in commits or PRs. Use conventional commit format (`feat:`, `fix:`, `docs:`, `chore:`). Always create feature branches — never commit directly to main.
+
+## Branches
+
+Default branch is **main**. A `develop` branch exists for the nightly dev-publish pipeline.
+
+## Testing Without Hardware
+
+All tests run without a physical button. `device/mock.rs` provides a `MockBackend` implementing `DeviceBackend` that emits synthetic press/release events. `integration_tests.rs` spins up a local TCP server as a webhook target and drives the full runtime loop end-to-end.
+
+## Demo Bundle
+
+`demo/` contains a self-contained demo environment: a WASM handler component (`component-redbutton-handler/`), a dashboard SPA (`dashboard/`), a bundle descriptor (`bundle.yaml`), and GTCwizard answers (`gtc_wizard_answers.json`). `setup.sh` provisions the demo via `gtc`; `watch.sh` monitors button events.
