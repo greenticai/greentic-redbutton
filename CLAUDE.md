@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `greentic-redbutton` is a Rust CLI that listens to a USB HID red-button device (by VID/PID) and posts `redbutton.click` webhook events. It auto-reconnects on unplug/replug, embeds 66-locale i18n at build time, and ships cross-platform binaries via `cargo binstall`.
 
+Crate version 1.2.0-dev.0, edition 2024, Rust 1.95.0 (pinned via `rust-toolchain.toml`).
+
 ## Build & Development Commands
 
 ```bash
@@ -97,4 +99,4 @@ All tests run without a physical button. `device/mock.rs` provides a `MockBacken
 
 ## Demo Bundle
 
-`demo/` contains a self-contained demo environment: a WASM handler component (`component-redbutton-handler/`), a dashboard SPA (`dashboard/`), a bundle descriptor (`bundle.yaml`), and GTCwizard answers (`gtc_wizard_answers.json`). `setup.sh` provisions the demo via `gtc`; `watch.sh` monitors button events.
+`demo/` contains a self-contained demo environment: a WASM handler component (`component-redbutton-handler/`), a dashboard SPA (`dashboard/`), a bundle descriptor (`bundle.yaml`), GTCwizard answers (`gtc_wizard_answers.json`), an app pack (`apps/redbutton-app/` with flows, components, and `pack.yaml`), and a demo environment config (`greentic.demo.yaml`). `setup.sh` provisions the demo via `gtc`; `watch.sh` monitors button events. `README.md` documents the demo prerequisites and usage.
