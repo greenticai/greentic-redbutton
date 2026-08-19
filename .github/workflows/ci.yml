@@ -16,7 +16,13 @@ jobs:
   ci:
     uses: greenticai/.github/.github/workflows/host-crate-ci.yml@main
     with:
-      setup-script: "sudo apt-get update && sudo apt-get install -y pkg-config libudev-dev"
+      setup-script: |
+        for attempt in 1 2 3; do
+          if timeout 300 sudo apt-get update && timeout 300 sudo apt-get install -y pkg-config libudev-dev; then break; fi
+          if [ "$attempt" -eq 3 ]; then echo "apt-get failed after 3 attempts" >&2; exit 1; fi
+          echo "apt-get attempt $attempt failed or timed out; retrying in 15s" >&2
+          sleep 15
+        done
 
   release-meta:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -38,7 +44,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Linux build dependencies
-        run: sudo apt-get update && sudo apt-get install -y pkg-config libudev-dev
+        run: |
+          for attempt in 1 2 3; do
+            if timeout 300 sudo apt-get update && timeout 300 sudo apt-get install -y pkg-config libudev-dev; then break; fi
+            if [ "$attempt" -eq 3 ]; then echo "apt-get failed after 3 attempts" >&2; exit 1; fi
+            echo "apt-get attempt $attempt failed or timed out; retrying in 15s" >&2
+            sleep 15
+          done
       - uses: dtolnay/rust-toolchain@1.94.0
       - uses: Swatinem/rust-cache@v2
       - name: package and publish dry-run
@@ -55,7 +67,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install Linux build dependencies
-        run: sudo apt-get update && sudo apt-get install -y pkg-config libudev-dev
+        run: |
+          for attempt in 1 2 3; do
+            if timeout 300 sudo apt-get update && timeout 300 sudo apt-get install -y pkg-config libudev-dev; then break; fi
+            if [ "$attempt" -eq 3 ]; then echo "apt-get failed after 3 attempts" >&2; exit 1; fi
+            echo "apt-get attempt $attempt failed or timed out; retrying in 15s" >&2
+            sleep 15
+          done
       - uses: dtolnay/rust-toolchain@1.94.0
       - uses: Swatinem/rust-cache@v2
       - name: Publish crates
@@ -116,7 +134,13 @@ jobs:
       - name: Install Linux build dependencies
         if: runner.os == 'Linux'
         shell: bash
-        run: sudo apt-get update && sudo apt-get install -y pkg-config libudev-dev
+        run: |
+          for attempt in 1 2 3; do
+            if timeout 300 sudo apt-get update && timeout 300 sudo apt-get install -y pkg-config libudev-dev; then break; fi
+            if [ "$attempt" -eq 3 ]; then echo "apt-get failed after 3 attempts" >&2; exit 1; fi
+            echo "apt-get attempt $attempt failed or timed out; retrying in 15s" >&2
+            sleep 15
+          done
       - name: Verify libudev is available
         if: runner.os == 'Linux'
         shell: bash
